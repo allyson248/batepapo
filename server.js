@@ -3,41 +3,29 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const fs = require('fs');
-const path = require('path'); // Novo módulo para gerenciar caminhos de arquivos
 
 const app = express();
 const PORT = 3000;
 
-// Middleware
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(session({ secret: 'secret_key', resave: false, saveUninitialized: true }));
+app.use(express.static('public'));
 
-// Serve arquivos estáticos (CSS, JS, imagens, etc)
-app.use(express.static(path.join(__dirname, 'public')));
 
-const loadDatabase = () => {
-  try {
-    return JSON.parse(fs.readFileSync('database.json', 'utf8'));
-  } catch (error) {
-    return { users: [], messages: [] }; // Retorna estrutura vazia caso não encontre o arquivo
-  }
-};
+const loadDatabase = () => JSON.parse(fs.readFileSync('database.json', 'utf8'));
+const saveDatabase = (data) => fs.writeFileSync('database.json', JSON.stringify(data, null, 2));
 
-const saveDatabase = (data) => {
-  fs.writeFileSync('database.json', JSON.stringify(data, null, 2));
-};
-
-// Autenticação Middleware
 function authMiddleware(req, res, next) {
   if (!req.session.user) return res.redirect('/');
   next();
 }
 
-// Rotas
+
 app.get('/', (req, res) => {
   if (req.session.user) return res.redirect('/chat');
-  res.sendFile(path.join(__dirname, '/public/index.html')); // Usando path.join para garantir o caminho correto
+  res.sendFile(__dirname + '/public/index.html');
 });
 
 app.post('/register', (req, res) => {
@@ -77,8 +65,13 @@ app.get('/chat', authMiddleware, (req, res) => {
     .map((msg) => `<p><strong>${msg.sender}:</strong> ${msg.content}</p>`)
     .join('');
 
+  // Obter todos os usuários cadastrados (exceto o usuário logado)
   const users = db.users.filter((user) => user.id !== req.session.user.id);
-  const userOptions = users.map((user) => `<option value="${user.id}">${user.name}</option>`).join('');
+  
+  // Gerar a lista de usuários para o select
+  const userOptions = users.map(
+    (user) => `<option value="${user.id}">${user.name}</option>`
+  ).join('');
 
   res.send(`
     <!DOCTYPE html>
@@ -96,12 +89,14 @@ app.get('/chat', authMiddleware, (req, res) => {
           ${messages || '<p class="no-messages">Nenhuma mensagem no momento.</p>'}
         </div>
 
+        <!-- Formulário para enviar mensagem -->
         <form action="/send" method="POST" class="form">
           <label for="sender">Escolha o remetente:</label>
           <select name="sender" id="sender">
             <option value="${req.session.user.id}">${req.session.user.name} (Você)</option>
             ${userOptions}
           </select>
+          
           <input type="text" name="content" placeholder="Digite sua mensagem" required>
           <button type="submit">Enviar</button>
         </form>
@@ -112,6 +107,8 @@ app.get('/chat', authMiddleware, (req, res) => {
     </html>
   `);
 });
+
+
 
 app.post('/send', authMiddleware, (req, res) => {
   const { sender, content } = req.body;
@@ -132,5 +129,6 @@ app.post('/send', authMiddleware, (req, res) => {
   res.redirect('/chat');
 });
 
-// Iniciar servidor
+
+// Iniciar o servidor
 app.listen(PORT, () => console.log(`Servidor rodando em http://localhost:${PORT}`));
