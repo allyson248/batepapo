@@ -61,7 +61,10 @@ app.get('/logout', (req, res) => {
 
 app.get('/chat', authMiddleware, (req, res) => {
   const db = loadDatabase();
-  const messages = db.messages.map((msg) => `<p><strong>${msg.sender}:</strong> ${msg.content}</p>`).join('');
+  const messages = db.messages.map(
+    (msg) => `<p><strong>${msg.sender}:</strong> ${msg.content}</p>`
+  ).join('');
+  
   res.send(`
     <!DOCTYPE html>
     <html lang="en">
@@ -75,7 +78,7 @@ app.get('/chat', authMiddleware, (req, res) => {
       <div class="container">
         <h1>Bem-vindo, ${req.session.user.name}!</h1>
         <div class="chat-box">
-          ${messages || '<p>Sem mensagens ainda.</p>'}
+          ${messages || '<p class="no-messages">Nenhuma mensagem no momento.</p>'}
         </div>
         <form action="/send" method="POST" class="form">
           <input type="text" name="content" placeholder="Digite sua mensagem" required>
@@ -87,6 +90,7 @@ app.get('/chat', authMiddleware, (req, res) => {
     </html>
   `);
 });
+
 
 app.post('/send', authMiddleware, (req, res) => {
   const { content } = req.body;
