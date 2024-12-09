@@ -1,0 +1,34 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "allyson",
+      "email": "allysonblackssj@gmail.com",
+      "password": "allyson"
+    },
+    {
+      "id": 2,
+      "name": "Maria da gloria bispo de Paula ",
+      "email": "maria@gmail.com",
+      "password": "123"
+    }
+  ],
+  "messages": [
+    {
+      "sender": "allyson",
+      "content": "salve"
+    },
+    {
+      "sender": "allyson",
+      "content": "uhul"
+    },
+    {
+      "sender": "Maria da gloria bispo de Paula ",
+      "content": "dale"
+    },
+    {
+      "sender": "Maria da gloria bispo de Paula ",
+      "content": "mec"
+    }
+  ]
+}
