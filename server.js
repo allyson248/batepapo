@@ -61,17 +61,30 @@ app.get('/logout', (req, res) => {
 
 app.get('/chat', authMiddleware, (req, res) => {
   const db = loadDatabase();
-  const messages = db.messages.map((msg) => `${msg.sender}: ${msg.content}`).join('<br>');
+  const messages = db.messages.map((msg) => `<p><strong>${msg.sender}:</strong> ${msg.content}</p>`).join('');
   res.send(`
-    <h1>Bem-vindo, ${req.session.user.name}!</h1>
-    <div style="border:1px solid #ccc; padding:10px; margin-bottom:10px; height:200px; overflow-y:scroll;">
-      ${messages || 'Sem mensagens ainda.'}
-    </div>
-    <form action="/send" method="POST">
-      <input type="text" name="content" placeholder="Digite sua mensagem" required>
-      <button type="submit">Enviar</button>
-    </form>
-    <a href="/logout">Sair</a>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Chat - Sala de Bate-Papo</title>
+      <link rel="stylesheet" href="/styles.css">
+    </head>
+    <body>
+      <div class="container">
+        <h1>Bem-vindo, ${req.session.user.name}!</h1>
+        <div class="chat-box">
+          ${messages || '<p>Sem mensagens ainda.</p>'}
+        </div>
+        <form action="/send" method="POST" class="form">
+          <input type="text" name="content" placeholder="Digite sua mensagem" required>
+          <button type="submit">Enviar</button>
+        </form>
+        <a href="/logout" class="logout-btn">Sair</a>
+      </div>
+    </body>
+    </html>
   `);
 });
 
@@ -84,5 +97,5 @@ app.post('/send', authMiddleware, (req, res) => {
   res.redirect('/chat');
 });
 
-
+// Iniciar o servidor
 app.listen(PORT, () => console.log(`Servidor rodando em http://localhost:${PORT}`));
