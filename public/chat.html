@@ -1,0 +1,11 @@
+<form action="/send" method="POST" class="form">
+    <label for="sender">Escolha o remetente:</label>
+    <select name="sender" id="sender">
+      <option value="${req.session.user.id}">${req.session.user.name} (Você)</option>
+      ${userOptions}
+    </select>
+    
+    <input type="text" name="content" placeholder="Digite sua mensagem" required>
+    <button type="submit">Enviar</button>
+  </form>
+  

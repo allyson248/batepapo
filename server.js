@@ -61,10 +61,18 @@ app.get('/logout', (req, res) => {
 
 app.get('/chat', authMiddleware, (req, res) => {
   const db = loadDatabase();
-  const messages = db.messages.map(
-    (msg) => `<p><strong>${msg.sender}:</strong> ${msg.content}</p>`
-  ).join('');
+  const messages = db.messages
+    .map((msg) => `<p><strong>${msg.sender}:</strong> ${msg.content}</p>`)
+    .join('');
+
+  // Obter todos os usuários cadastrados (exceto o usuário logado)
+  const users = db.users.filter((user) => user.id !== req.session.user.id);
   
+  // Gerar a lista de usuários para o select
+  const userOptions = users.map(
+    (user) => `<option value="${user.id}">${user.name}</option>`
+  ).join('');
+
   res.send(`
     <!DOCTYPE html>
     <html lang="en">
@@ -80,10 +88,19 @@ app.get('/chat', authMiddleware, (req, res) => {
         <div class="chat-box">
           ${messages || '<p class="no-messages">Nenhuma mensagem no momento.</p>'}
         </div>
+
+        <!-- Formulário para enviar mensagem -->
         <form action="/send" method="POST" class="form">
+          <label for="sender">Escolha o remetente:</label>
+          <select name="sender" id="sender">
+            <option value="${req.session.user.id}">${req.session.user.name} (Você)</option>
+            ${userOptions}
+          </select>
+          
           <input type="text" name="content" placeholder="Digite sua mensagem" required>
           <button type="submit">Enviar</button>
         </form>
+
         <a href="/logout" class="logout-btn">Sair</a>
       </div>
     </body>
@@ -92,14 +109,26 @@ app.get('/chat', authMiddleware, (req, res) => {
 });
 
 
+
 app.post('/send', authMiddleware, (req, res) => {
-  const { content } = req.body;
+  const { sender, content } = req.body;
   const db = loadDatabase();
 
-  db.messages.push({ sender: req.session.user.name, content });
+  const senderUser = db.users.find((user) => user.id == sender);
+
+  if (!senderUser) {
+    return res.send('<script>alert("Usuário inválido!"); window.location="/chat";</script>');
+  }
+
+  db.messages.push({
+    sender: senderUser.name,
+    content,
+  });
+
   saveDatabase(db);
   res.redirect('/chat');
 });
+
 
 // Iniciar o servidor
 app.listen(PORT, () => console.log(`Servidor rodando em http://localhost:${PORT}`));
